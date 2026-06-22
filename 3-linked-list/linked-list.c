@@ -21,6 +21,12 @@ typedef struct Lista
     No *inicio;
 } Lista;
 
+typedef struct ResultadoBusca
+{
+    No *anterior;
+    No *atual;
+} ResultadoBusca;
+
 // Cria a cabeça da lista
 Lista listaUsuarios = { NULL };
 
@@ -47,6 +53,7 @@ Usuario criarUsuario()
     return usuario;
 }
 
+// Insere usuário ao final da lista
 void inserirUsuario(Usuario usuario) // Recebe o usuário criado na função criarUsuario
 {
     // Cria um nó na memória
@@ -88,7 +95,7 @@ void inserirUsuario(Usuario usuario) // Recebe o usuário criado na função cri
 }
 
 // Insere usuário no início da lista
-void inserirUsuarioInicio(Usuario usuario)
+void inserirUsuarioInicio(Usuario usuario) // Recebe o usuário criado na função criarUsuario
 {
     // Cria um nó na memória
     No *novo_no = malloc(sizeof(No));
@@ -104,7 +111,7 @@ void inserirUsuarioInicio(Usuario usuario)
     strcpy(novo_no->usuario.sobrenome, usuario.sobrenome);
     novo_no->usuario.idade = usuario.idade;
 
-
+    // Verifica se a lista está vazia e, se sim, faz o primeiro nó apontar para NULL (ou seja, o primeiro nó é também o último)
     if (listaUsuarios.inicio == NULL)
     {
         novo_no->proximo = NULL;
@@ -113,16 +120,20 @@ void inserirUsuarioInicio(Usuario usuario)
         return;
     }
 
+    // Ajusta os ponteiros
     novo_no->proximo = listaUsuarios.inicio;
     listaUsuarios.inicio = novo_no;
 
     printf("\nUsuário cadastrado com sucesso!\n");
 }
 
-No* buscarUsuario()
+ResultadoBusca buscarUsuario() // Retorna um dado do tipo ResultadoBusca ({No *anterior; No *atual})
 {
-    // Atribui o início da lista à variável (ponteiro) temporária atual
+    // Atribui o início da lista à variável (ponteiro) temporária atual e cria um ponteiro para o nó anterior
     No *atual = listaUsuarios.inicio;
+    No *anterior = NULL;
+
+    ResultadoBusca resultado_busca = { anterior, atual };
 
     // Variáveis para guardar a entrada do usuário para primeiro nome e sobrenome
     char primeiro_nome[30];
@@ -137,154 +148,125 @@ No* buscarUsuario()
     fgets(sobrenome, 19, stdin);
     sobrenome[strcspn(sobrenome, "\n")] = '\0';
 
-    // Verifica se a lista está vazia, se estiver, retorna NULL
+    // Verifica se a lista está vazia, se estiver, retorna os campos do dado sendo NULL
     if (listaUsuarios.inicio == NULL)
     {
         printf("\nNenhum usuário cadastrado!\n");
-        return NULL;
+        return resultado_busca;
     }
 
     // Percorre a lista
     while (atual != NULL)
     {
-        // Se encontrar o valor (usuário) buscado, retorna um ponteiro para este valor
+        // Se encontrar o valor (usuário) buscado, retorna um dado do tipo ResultadoBusca com ponteiro para o dado atual e o seu anterior
         if (strcmp(atual->usuario.primeiro_nome, primeiro_nome) == 0 && strcmp(atual->usuario.sobrenome, sobrenome) == 0)
         {
-            return atual;
-        }
-
-        atual = atual->proximo;
-    }
-
-    // Ao percorrer a lista inteira, se não achar o valor buscado, retorna NULL
-    printf("\nUsuário não encontrado!\n");
-    return NULL;
-}
-
-void excluirUsuario(No *usuario)
-{
-    // Verifica se a busca retornou um usuário válido, se não, encerra a função sem exclusão
-    if (usuario == NULL)
-    {
-        return;
-    }
-
-    // Variável (ponteiro) temporária para a cabeça da lista e auxiliar para ajustar ponteiros da lista
-    No *atual = listaUsuarios.inicio;
-    No *anterior = NULL;
-
-    // Percorre a lista até o usuário (nó) a ser removido
-    while (atual != NULL)
-    {
-        if (strcmp(atual->usuario.primeiro_nome, usuario->usuario.primeiro_nome) == 0 && strcmp(atual->usuario.sobrenome, usuario->usuario.sobrenome) == 0)
-        {
-            if (anterior == NULL)
-            {
-                listaUsuarios.inicio = atual->proximo;
-            }
-            else
-            {
-                anterior->proximo = atual->proximo;
-            }
-
-            free(atual);
-            printf("\nUsuário excluído com sucesso!\n");
-            return;
+            resultado_busca.anterior = anterior;
+            resultado_busca.atual = atual;
+            return resultado_busca;
         }
 
         anterior = atual;
         atual = atual->proximo;
     }
+
+    anterior = NULL;
+    // Ao percorrer a lista inteira, se não achar o valor buscado, retorna NULL
+    printf("\nUsuário não encontrado!\n");
+    return resultado_busca;
 }
 
-void alterarUsuario(No *usuario)
+void excluirUsuario(ResultadoBusca usuario)
 {
-    // Verifica se a busca retornou um usuário válido, se não, encerra a função
-    if (usuario == NULL)
+    // Verifica se a busca retornou um usuário válido, se não, encerra a função sem exclusão
+    if (usuario.atual == NULL)
     {
         return;
     }
 
-    // Variável (ponteiro) temporária para a cabeça da lista
-    No *atual = listaUsuarios.inicio;
+    // Variável (ponteiro) temporária para a cabeça da lista e auxiliar para ajustar ponteiros da lista
+    No *atual = usuario.atual;
+    No *anterior = usuario.anterior;
 
-    // Percorre a lista até o usuário (nó) a ser alterado
-    while (atual != NULL)
+    anterior->proximo = atual->proximo;
+    free(atual);
+    printf("\nUsuário excluído com sucesso!\n");
+}
+
+void alterarUsuario(ResultadoBusca usuario)
+{
+    // Verifica se a busca retornou um usuário válido, se não, encerra a função
+    if (usuario.atual == NULL)
     {
-        if (strcmp(atual->usuario.primeiro_nome, usuario->usuario.primeiro_nome) == 0 && strcmp(atual->usuario.sobrenome, usuario->usuario.sobrenome) == 0)
+        return;
+    }
+
+    printf("\nQual dado você quer alterar do usuário \"%s\"\n", usuario.atual->usuario.primeiro_nome);
+
+    int opcao;
+
+    do
+    {
+        printf("\nESCOLHA:\n");
+        printf("1 - Primeiro Nome\n");
+        printf("2 - Sobrenome\n");
+        printf("3 - Idade\n");
+        printf("0 - Terminar alterações\n");
+        printf("Opção: ");
+        scanf("%d", &opcao);
+
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF)
+            ;
+
+        switch (opcao)
         {
-            printf("\nQual dado você quer alterar do usuário \"%s\"\n", atual->usuario.primeiro_nome);
+        case 1:
+        {
+            char novo_primeiro_nome[30];
 
-            int opcao;
-
-            do
-            {
-                printf("\nESCOLHA:\n");
-                printf("1 - Primeiro Nome\n");
-                printf("2 - Sobrenome\n");
-                printf("3 - Idade\n");
-                printf("0 - Terminar alterações\n");
-                printf("Opção: ");
-                scanf("%d", &opcao);
-
-                int c;
-                while ((c = getchar()) != '\n' && c != EOF)
-                    ;
-
-                switch (opcao)
-                {
-                case 1:
-                {
-                    char novo_primeiro_nome[30];
-
-                    printf("Digite o novo Primeiro Nome: ");
-                    fgets(novo_primeiro_nome, 30, stdin);
-                    strcpy(atual->usuario.primeiro_nome, novo_primeiro_nome);
-                    atual->usuario.primeiro_nome[strcspn(atual->usuario.primeiro_nome, "\n")] = '\0';
-                    printf("Primeiro Nome alterado com sucesso!\n");
-                    break;
-                }
-
-                case 2:
-                {
-                    char novo_sobrenome[20];
-
-                    printf("Digite o novo Sobrenome: ");
-                    fgets(novo_sobrenome, 20, stdin);
-                    strcpy(atual->usuario.sobrenome, novo_sobrenome);
-                    atual->usuario.sobrenome[strcspn(atual->usuario.sobrenome, "\n")] = '\0';
-                    printf("Sobrenome alterado co sucesso!\n");
-                    break;
-                }
-
-                case 3:
-                {
-                    int nova_idade;
-
-                    printf("Digite a nova Idade: ");
-                    scanf("%d", &nova_idade);
-
-                    atual->usuario.idade = nova_idade;
-
-                    printf("Idade alterada com sucesso!\n");
-                    break;
-                }
-
-                case 0:
-                    printf("Voltando ao Menu Inicial...\n");
-                    break;
-
-                default:
-                    printf("Opção inválida!\n");
-                }
-
-            } while (opcao != 0);
-            
-            return;
+            printf("Digite o novo Primeiro Nome: ");
+            fgets(novo_primeiro_nome, 30, stdin);
+            strcpy(usuario.atual->usuario.primeiro_nome, novo_primeiro_nome);
+            usuario.atual->usuario.primeiro_nome[strcspn(usuario.atual->usuario.primeiro_nome, "\n")] = '\0';
+            printf("Primeiro Nome alterado com sucesso!\n");
+            break;
         }
 
-        atual = atual->proximo;
-    }
+        case 2:
+        {
+            char novo_sobrenome[20];
+
+            printf("Digite o novo Sobrenome: ");
+            fgets(novo_sobrenome, 20, stdin);
+            strcpy(usuario.atual->usuario.sobrenome, novo_sobrenome);
+            usuario.atual->usuario.sobrenome[strcspn(usuario.atual->usuario.sobrenome, "\n")] = '\0';
+            printf("Sobrenome alterado co sucesso!\n");
+            break;
+        }
+
+        case 3:
+        {
+            int nova_idade;
+
+            printf("Digite a nova Idade: ");
+            scanf("%d", &nova_idade);
+
+            usuario.atual->usuario.idade = nova_idade;
+
+            printf("Idade alterada com sucesso!\n");
+            break;
+        }
+
+        case 0:
+            printf("Voltando ao Menu Inicial...\n");
+            break;
+
+        default:
+            printf("Opção inválida!\n");
+        }
+
+    } while (opcao != 0);
 }
 
 void listarUsuarios(No *inicio) // Recebe a cabeça da lista
@@ -393,13 +375,13 @@ int main()
 
         case 2:
         {
-            No *usuario = buscarUsuario();
+            ResultadoBusca usuario = buscarUsuario();
             excluirUsuario(usuario);
             break;
         }
 
         case 3:
-            No *usuario = buscarUsuario();
+            ResultadoBusca usuario = buscarUsuario();
             alterarUsuario(usuario);
             break;
 
