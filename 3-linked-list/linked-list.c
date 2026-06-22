@@ -19,6 +19,7 @@ typedef struct No
 typedef struct Lista
 {
     No *inicio;
+    No *fim;
 } Lista;
 
 typedef struct ResultadoBusca
@@ -28,7 +29,7 @@ typedef struct ResultadoBusca
 } ResultadoBusca;
 
 // Cria a cabeça da lista
-Lista listaUsuarios = { NULL };
+Lista listaUsuarios = { NULL, NULL };
 
 Usuario criarUsuario()
 {
@@ -37,12 +38,12 @@ Usuario criarUsuario()
 
     // Atribui o valor ao campo primeiro_nome de usuario
     printf("Digite o Primeiro Nome do usuário: ");
-    fgets(usuario.primeiro_nome, 29, stdin);
+    fgets(usuario.primeiro_nome, 30, stdin);
     usuario.primeiro_nome[strcspn(usuario.primeiro_nome, "\n")] = '\0';
 
     // Atribui o valor ao campo sobrenome de usuario
     printf("Digite o Sobrenome do usuário: ");
-    fgets(usuario.sobrenome, 19, stdin);
+    fgets(usuario.sobrenome, 20, stdin);
     usuario.sobrenome[strcspn(usuario.sobrenome, "\n")] = '\0';
 
     // Atribui o valor ao campo idade de usuario
@@ -65,30 +66,26 @@ void inserirUsuario(Usuario usuario) // Recebe o usuário criado na função cri
         printf("Erro ao alocar memória!\n");
         return;
     }
+
     // Atribui os valores do nó
     strcpy(novo_no->usuario.primeiro_nome, usuario.primeiro_nome);
     strcpy(novo_no->usuario.sobrenome, usuario.sobrenome);
     novo_no->usuario.idade = usuario.idade;
     novo_no->proximo = NULL;
 
-    // Se a lista estiver vazia, atribui o nó criado ao início da lista
+    // Se a lista estiver vazia, atribui o nó criado ao início da lista e o final da lista aponta para o primeiro e último nó
     if (listaUsuarios.inicio == NULL)
     {
         listaUsuarios.inicio = novo_no;
+        listaUsuarios.fim = novo_no;
     }
-    // Se a lista já tiver dados, percorre a lista para inserir o novo dado ao final da lista
+    // Se a lista já tiver dados
     else
     {
-        No *atual = listaUsuarios.inicio;
-
-        // Percorre a lista
-        while (atual->proximo != NULL)
-        {
-            atual = atual->proximo;
-        }
-
-        // Atribui o novo_no ao final da lista
-        atual->proximo = novo_no;
+        // o último nó da lista agora aponta para o novo nó
+        listaUsuarios.fim->proximo = novo_no;
+        // atribui o novo nó ao final da lista
+        listaUsuarios.fim = novo_no;
     }
 
     printf("\nUsuário cadastrado com sucesso!\n");
@@ -141,11 +138,11 @@ ResultadoBusca buscarUsuario() // Retorna um dado do tipo ResultadoBusca ({No *a
 
     // Atribui a entrada do usuário às variáveis
     printf("Qual o Primeiro Nome do usuario: ");
-    fgets(primeiro_nome, 29, stdin);
+    fgets(primeiro_nome, 30, stdin);
     primeiro_nome[strcspn(primeiro_nome, "\n")] = '\0';
 
     printf("Qual o Sobrenome do usuario: ");
-    fgets(sobrenome, 19, stdin);
+    fgets(sobrenome, 20, stdin);
     sobrenome[strcspn(sobrenome, "\n")] = '\0';
 
     // Verifica se a lista está vazia, se estiver, retorna os campos do dado sendo NULL
@@ -188,7 +185,29 @@ void excluirUsuario(ResultadoBusca usuario)
     No *atual = usuario.atual;
     No *anterior = usuario.anterior;
 
-    anterior->proximo = atual->proximo;
+    // Se o usuário a ser excluído for o primeiro, atribui o proximo usuário como o início da lista
+    if (anterior == NULL)
+    {
+        listaUsuarios.inicio = atual->proximo;
+
+        // Se só tiver um usuário, agora o final da lista não aponta para nenhum nó (usuário)
+        if (atual == listaUsuarios.fim)
+        {
+            listaUsuarios.fim = NULL;
+        }
+    }
+    else
+    {
+        // ajusta o ponteiro do usuário anterior para apontar para o próximo do que foi excluído
+        anterior->proximo = atual->proximo;
+    
+        // Se o usuário a ser excluído for o último, atribui o anterior (novo último usuário) como o último da lista (fim)
+        if (atual == listaUsuarios.fim)
+        {
+            listaUsuarios.fim = anterior;
+        }
+    }
+
     free(atual);
     printf("\nUsuário excluído com sucesso!\n");
 }
