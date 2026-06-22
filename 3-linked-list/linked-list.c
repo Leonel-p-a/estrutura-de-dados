@@ -16,8 +16,13 @@ typedef struct No
     struct No *proximo;
 } No;
 
+typedef struct Lista
+{
+    No *inicio;
+} Lista;
+
 // Cria a cabeça da lista
-No *inicio = NULL;
+Lista listaUsuarios = { NULL };
 
 Usuario criarUsuario()
 {
@@ -60,14 +65,14 @@ void inserirUsuario(Usuario usuario) // Recebe o usuário criado na função cri
     novo_no->proximo = NULL;
 
     // Se a lista estiver vazia, atribui o nó criado ao início da lista
-    if (inicio == NULL)
+    if (listaUsuarios.inicio == NULL)
     {
-        inicio = novo_no;
+        listaUsuarios.inicio = novo_no;
     }
     // Se a lista já tiver dados, percorre a lista para inserir o novo dado ao final da lista
     else
     {
-        No *atual = inicio;
+        No *atual = listaUsuarios.inicio;
 
         // Percorre a lista
         while (atual->proximo != NULL)
@@ -100,16 +105,16 @@ void inserirUsuarioInicio(Usuario usuario)
     novo_no->usuario.idade = usuario.idade;
 
 
-    if (inicio == NULL)
+    if (listaUsuarios.inicio == NULL)
     {
         novo_no->proximo = NULL;
-        inicio = novo_no;
+        listaUsuarios.inicio = novo_no;
 
         return;
     }
 
-    novo_no->proximo = inicio;
-    inicio = novo_no;
+    novo_no->proximo = listaUsuarios.inicio;
+    listaUsuarios.inicio = novo_no;
 
     printf("\nUsuário cadastrado com sucesso!\n");
 }
@@ -117,7 +122,7 @@ void inserirUsuarioInicio(Usuario usuario)
 No* buscarUsuario()
 {
     // Atribui o início da lista à variável (ponteiro) temporária atual
-    No *atual = inicio;
+    No *atual = listaUsuarios.inicio;
 
     // Variáveis para guardar a entrada do usuário para primeiro nome e sobrenome
     char primeiro_nome[30];
@@ -133,7 +138,7 @@ No* buscarUsuario()
     sobrenome[strcspn(sobrenome, "\n")] = '\0';
 
     // Verifica se a lista está vazia, se estiver, retorna NULL
-    if (inicio == NULL)
+    if (listaUsuarios.inicio == NULL)
     {
         printf("\nNenhum usuário cadastrado!\n");
         return NULL;
@@ -165,7 +170,7 @@ void excluirUsuario(No *usuario)
     }
 
     // Variável (ponteiro) temporária para a cabeça da lista e auxiliar para ajustar ponteiros da lista
-    No *atual = inicio;
+    No *atual = listaUsuarios.inicio;
     No *anterior = NULL;
 
     // Percorre a lista até o usuário (nó) a ser removido
@@ -175,7 +180,7 @@ void excluirUsuario(No *usuario)
         {
             if (anterior == NULL)
             {
-                inicio = atual->proximo;
+                listaUsuarios.inicio = atual->proximo;
             }
             else
             {
@@ -201,7 +206,7 @@ void alterarUsuario(No *usuario)
     }
 
     // Variável (ponteiro) temporária para a cabeça da lista
-    No *atual = inicio;
+    No *atual = listaUsuarios.inicio;
 
     // Percorre a lista até o usuário (nó) a ser alterado
     while (atual != NULL)
@@ -312,7 +317,7 @@ void listarUsuarios(No *inicio) // Recebe a cabeça da lista
 // Liberar memória
 void liberarLista()
 {
-    No *atual = inicio;
+    No *atual = listaUsuarios.inicio;
 
     while (atual != NULL)
     {
@@ -323,7 +328,7 @@ void liberarLista()
         free(temporario);
     }
 
-    inicio = NULL;
+    listaUsuarios.inicio = NULL;
 }
 
 int main()
@@ -399,7 +404,7 @@ int main()
             break;
 
         case 4:
-            listarUsuarios(inicio);
+            listarUsuarios(listaUsuarios.inicio);
             break;
 
         case 0:
