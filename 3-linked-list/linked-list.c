@@ -28,9 +28,6 @@ typedef struct ResultadoBusca
     No *atual;
 } ResultadoBusca;
 
-// Cria a cabeça da lista
-Lista listaUsuarios = { NULL, NULL };
-
 Usuario criarUsuario()
 {
     // Cria uma variável do tipo struct Usuario
@@ -54,80 +51,88 @@ Usuario criarUsuario()
     return usuario;
 }
 
-// Insere usuário ao final da lista
-void inserirUsuario(Usuario usuario) // Recebe o usuário criado na função criarUsuario
+// Cria nó na memória dinâmica
+No *criarNo(Usuario usuario)
 {
-    // Cria um nó na memória
+    // Cria novo nó na memória
     No *novo_no = malloc(sizeof(No));
 
     // Verifica alocação de memória
     if (novo_no == NULL)
     {
         printf("Erro ao alocar memória!\n");
+        return NULL;
+    }
+
+    // Atribui os valores do nó e retorna o nó
+    novo_no->usuario = usuario;
+
+    return novo_no;
+}
+
+// Insere usuário ao final da lista
+void inserirUsuario(Lista *lista, Usuario usuario) // Recebe o usuário criado na função criarUsuario
+{
+    // Cria um nó na memória
+    No *novo_no = criarNo(usuario);
+
+    if (novo_no == NULL)
+    {
         return;
     }
 
-    // Atribui os valores do nó
-    strcpy(novo_no->usuario.primeiro_nome, usuario.primeiro_nome);
-    strcpy(novo_no->usuario.sobrenome, usuario.sobrenome);
-    novo_no->usuario.idade = usuario.idade;
-    novo_no->proximo = NULL;
-
-    // Se a lista estiver vazia, atribui o nó criado ao início da lista e o final da lista aponta para o primeiro e último nó
-    if (listaUsuarios.inicio == NULL)
+    // Se a lista estiver vazia, faz o inicio e final da lista apontarem para o nó criado
+    if (lista->inicio == NULL)
     {
-        listaUsuarios.inicio = novo_no;
-        listaUsuarios.fim = novo_no;
+        lista->inicio = novo_no;
+        lista->fim = novo_no;
     }
     // Se a lista já tiver dados
     else
     {
-        // o último nó da lista agora aponta para o novo nó
-        listaUsuarios.fim->proximo = novo_no;
-        // atribui o novo nó ao final da lista
-        listaUsuarios.fim = novo_no;
+        // o anttigo último nó da lista agora aponta para o novo nó
+        lista->fim->proximo = novo_no;
+        // faz o final da lista apontar para o novo último nó
+        lista->fim = novo_no;
     }
 
     printf("\nUsuário cadastrado com sucesso!\n");
 }
 
 // Insere usuário no início da lista
-void inserirUsuarioInicio(Usuario usuario) // Recebe o usuário criado na função criarUsuario
+void inserirUsuarioInicio(Lista *lista, Usuario usuario) // Recebe o usuário criado na função criarUsuario
 {
     // Cria um nó na memória
-    No *novo_no = malloc(sizeof(No));
+    No *novo_no = criarNo(usuario);
 
-    // Verifica alocação de memória
     if (novo_no == NULL)
     {
-        printf("Erro ao alocar memória!\n");
         return;
     }
-    // Atribui os valores do nó
-    strcpy(novo_no->usuario.primeiro_nome, usuario.primeiro_nome);
-    strcpy(novo_no->usuario.sobrenome, usuario.sobrenome);
-    novo_no->usuario.idade = usuario.idade;
 
     // Verifica se a lista está vazia e, se sim, faz o primeiro nó apontar para NULL (ou seja, o primeiro nó é também o último)
-    if (listaUsuarios.inicio == NULL)
+    if (lista->inicio == NULL)
     {
-        novo_no->proximo = NULL;
-        listaUsuarios.inicio = novo_no;
+        lista->inicio = novo_no;
+        lista->fim = novo_no;
+
+        printf("\nUsuário cadastrado com sucesso!\n");
 
         return;
     }
 
     // Ajusta os ponteiros
-    novo_no->proximo = listaUsuarios.inicio;
-    listaUsuarios.inicio = novo_no;
+    novo_no->proximo = lista->inicio;
+    lista->inicio = novo_no;
 
     printf("\nUsuário cadastrado com sucesso!\n");
 }
 
-ResultadoBusca buscarUsuario() // Retorna um dado do tipo ResultadoBusca ({No *anterior; No *atual})
+// Busca e retorna o usuário buscado
+ResultadoBusca buscarUsuario(Lista *lista) // Retorna um dado do tipo ResultadoBusca ({No *anterior; No *atual})
 {
     // Atribui o início da lista à variável (ponteiro) temporária atual e cria um ponteiro para o nó anterior
-    No *atual = listaUsuarios.inicio;
+    No *atual = lista->inicio;
     No *anterior = NULL;
 
     ResultadoBusca resultado_busca = { anterior, atual };
@@ -146,7 +151,7 @@ ResultadoBusca buscarUsuario() // Retorna um dado do tipo ResultadoBusca ({No *a
     sobrenome[strcspn(sobrenome, "\n")] = '\0';
 
     // Verifica se a lista está vazia, se estiver, retorna os campos do dado sendo NULL
-    if (listaUsuarios.inicio == NULL)
+    if (lista->inicio == NULL)
     {
         printf("\nNenhum usuário cadastrado!\n");
         return resultado_busca;
@@ -167,13 +172,15 @@ ResultadoBusca buscarUsuario() // Retorna um dado do tipo ResultadoBusca ({No *a
         atual = atual->proximo;
     }
 
-    anterior = NULL;
+    resultado_busca.anterior = NULL;
+    resultado_busca.atual = NULL;
     // Ao percorrer a lista inteira, se não achar o valor buscado, retorna NULL
     printf("\nUsuário não encontrado!\n");
     return resultado_busca;
 }
 
-void excluirUsuario(ResultadoBusca usuario)
+// Exclui o usuário retornado pela função buscarUsuario
+void excluirUsuario(Lista *lista, ResultadoBusca usuario)
 {
     // Verifica se a busca retornou um usuário válido, se não, encerra a função sem exclusão
     if (usuario.atual == NULL)
@@ -188,12 +195,12 @@ void excluirUsuario(ResultadoBusca usuario)
     // Se o usuário a ser excluído for o primeiro, atribui o proximo usuário como o início da lista
     if (anterior == NULL)
     {
-        listaUsuarios.inicio = atual->proximo;
+        lista->inicio = atual->proximo;
 
         // Se só tiver um usuário, agora o final da lista não aponta para nenhum nó (usuário)
-        if (atual == listaUsuarios.fim)
+        if (atual == lista->fim)
         {
-            listaUsuarios.fim = NULL;
+            lista->fim = NULL;
         }
     }
     else
@@ -202,9 +209,9 @@ void excluirUsuario(ResultadoBusca usuario)
         anterior->proximo = atual->proximo;
     
         // Se o usuário a ser excluído for o último, atribui o anterior (novo último usuário) como o último da lista (fim)
-        if (atual == listaUsuarios.fim)
+        if (atual == lista->fim)
         {
-            listaUsuarios.fim = anterior;
+            lista->fim = anterior;
         }
     }
 
@@ -212,6 +219,7 @@ void excluirUsuario(ResultadoBusca usuario)
     printf("\nUsuário excluído com sucesso!\n");
 }
 
+// Altera o usuário buscado na função buscarUsuario
 void alterarUsuario(ResultadoBusca usuario)
 {
     // Verifica se a busca retornou um usuário válido, se não, encerra a função
@@ -288,17 +296,18 @@ void alterarUsuario(ResultadoBusca usuario)
     } while (opcao != 0);
 }
 
-void listarUsuarios(No *inicio) // Recebe a cabeça da lista
+// recebe o ponteiro do início da lista e imprime os usuários cadastrados
+void listarUsuarios(Lista *lista) // Recebe a cabeça da lista
 {
     // Verifica se a lista está vazia
-    if (inicio == NULL)
+    if (lista->inicio == NULL)
     {
         printf("Nenhum usuário cadastrado!\n");
         return;
     }
 
     // Atribui o início da lista à variável (ponteiro) temporária atual
-    No *atual = inicio;
+    No *atual = lista->inicio;
 
     // Declara uma variável auxiliar contadora e atribui o valor 1
     int contador = 1;
@@ -316,9 +325,9 @@ void listarUsuarios(No *inicio) // Recebe a cabeça da lista
 }
 
 // Liberar memória
-void liberarLista()
+void liberarLista(Lista *lista)
 {
-    No *atual = listaUsuarios.inicio;
+    No *atual = lista->inicio;
 
     while (atual != NULL)
     {
@@ -329,12 +338,16 @@ void liberarLista()
         free(temporario);
     }
 
-    listaUsuarios.inicio = NULL;
+    lista->inicio = NULL;
+    lista->fim = NULL;
 }
 
 int main()
 {
     setlocale(LC_ALL, "pt_BR.UTF-8");
+
+    // Cria a cabeça da lista
+    Lista lista_usuarios = { NULL, NULL };
 
     int opcao;
 
@@ -377,11 +390,11 @@ int main()
                 switch (resposta)
                 {
                 case 1:
-                    inserirUsuarioInicio(novo_usuario);
+                    inserirUsuarioInicio(&lista_usuarios, novo_usuario);
                     break;
 
                 case 2:
-                    inserirUsuario(novo_usuario);
+                    inserirUsuario(&lista_usuarios, novo_usuario);
                     break;
                 
                 default:
@@ -394,22 +407,22 @@ int main()
 
         case 2:
         {
-            ResultadoBusca usuario = buscarUsuario();
-            excluirUsuario(usuario);
+            ResultadoBusca usuario = buscarUsuario(&lista_usuarios);
+            excluirUsuario(&lista_usuarios, usuario);
             break;
         }
 
         case 3:
-            ResultadoBusca usuario = buscarUsuario();
+            ResultadoBusca usuario = buscarUsuario(&lista_usuarios);
             alterarUsuario(usuario);
             break;
 
         case 4:
-            listarUsuarios(listaUsuarios.inicio);
+            listarUsuarios(&lista_usuarios);
             break;
 
         case 0:
-            liberarLista();
+            liberarLista(&lista_usuarios);
             printf("Encerrando o programa...\n");
             break;
 
