@@ -3,8 +3,6 @@
 #include <string.h>
 #include <locale.h>
 
-int codigo = 10000;
-
 typedef struct Produto
 {
     int codigo;
@@ -24,21 +22,19 @@ typedef struct Lista
 {
     No *inicio;
     No *fim;
+    int proximo_codigo;
 } Lista;
 
-int gerarCodigo(int *codigo)
+int gerarCodigo(Lista *lista)
 {
-    *codigo += 1;
-    return *codigo;
+    return ++lista->proximo_codigo;
 }
 
-Produto criarProduto()
+Produto criarProduto(Lista *lista)
 {
     Produto produto;
 
-    int codigo_produto = gerarCodigo(&codigo);
-
-    produto.codigo = codigo;
+    produto.codigo = gerarCodigo(lista);
 
     printf("Nome do Produto: ");
     fgets(produto.nome, 100, stdin);
@@ -121,7 +117,7 @@ void inserirInicio(Lista *lista, Produto produto)
     printf("\nProduto cadastrado com sucesso!\n");
 }
 
-void inserirMeio(Lista *lista, Produto produto, No *produto_referencia)
+void inserirAposNo(Lista *lista, Produto produto, No *produto_referencia)
 {
     No *novo_no = criarNo(produto);
 
@@ -149,7 +145,19 @@ void inserirMeio(Lista *lista, Produto produto, No *produto_referencia)
 
     novo_no->proximo = produto_referencia->proximo;
     novo_no->anterior = produto_referencia;
+
+    if (produto_referencia->proximo != NULL)
+    {
+        produto_referencia->proximo->anterior = novo_no;
+    }
+
     produto_referencia->proximo = novo_no;
+
+    if (novo_no->proximo == NULL)
+    {
+        lista->fim = novo_no;
+    }
+
     printf("Produto cadastrado com sucesso!\n");
 }
 
@@ -158,9 +166,7 @@ void inserirFinal(Lista *lista, Produto produto)
     No *novo_no = criarNo(produto);
 
     if (novo_no == NULL)
-    {
         return;
-    }
 
     if (lista->inicio == NULL)
     {
@@ -177,13 +183,9 @@ void inserirFinal(Lista *lista, Produto produto)
     printf("\nProduto cadastrado com sucesso!\n");
 }
 
-No *buscarProdutoCodigo(Lista *lista)
+No *buscarProdutoCodigo(Lista *lista, int codigo_produto)
 {
     No *atual = lista->inicio;
-    int codigo_produto;
-
-    printf("Digite o código do produto: ");
-    scanf("%d", &codigo_produto);
 
     while (atual != NULL)
     {
@@ -199,7 +201,7 @@ No *buscarProdutoCodigo(Lista *lista)
     return NULL;
 }
 
-void alterarProduto(Lista *lista, No *produto)
+void alterarProduto(No *produto)
 {
     if (produto == NULL)
         return;
@@ -281,6 +283,7 @@ void alterarProduto(Lista *lista, No *produto)
                 }
             } while (opcao != 1 && opcao != 2);
 
+            printf("Descrição alterada com sucesso!\n");
             break;
         }
 
@@ -300,6 +303,37 @@ void excluirProduto(Lista *lista, No *produto)
     if (produto == NULL)
         return;
 
+    // Se for nó único
+    if (produto->anterior == NULL && produto->proximo == NULL)
+    {
+        lista->inicio = NULL;
+        lista->fim = NULL;
+        free(produto);
+        printf("Produto excluído com sucesso!\n");
+        return;
+    }
+
+    // Se for o primeiro nó da lista
+    if (produto->anterior == NULL)
+    {
+        produto->proximo->anterior = NULL;
+        lista->inicio = produto->proximo;
+        free(produto);
+        printf("Produto excluído com sucesso!\n");
+        return;
+    }
+
+    // Se for o último nó da lista
+    if (produto->proximo == NULL)
+    {
+        produto->anterior->proximo = NULL;
+        lista->fim = produto->anterior;
+        free(produto);
+        printf("Produto excluído com sucesso!\n");
+        return;
+    }
+
+    // Se for nó intermediário
     produto->anterior->proximo = produto->proximo;
     produto->proximo->anterior = produto->anterior;
     free(produto);
@@ -350,7 +384,7 @@ int main()
 {
     setlocale(LC_ALL, "pt_BR.UTF-8");
 
-    Lista lista_produtos = {NULL, NULL};
+    Lista lista_produtos = {NULL, NULL, 10000};
     int opcao;
 
     do
@@ -373,7 +407,7 @@ int main()
         {
         case 1:
         {
-            Produto produto = criarProduto();
+            Produto produto = criarProduto(&lista_produtos);
             int opcao;
 
             do
@@ -397,9 +431,13 @@ int main()
 
                 case 2:
                 {
+                    int codigo_produto;
+
                     printf("Inserir o novo produto após qual produto da lista:\n");
-                    No *produto_referencia = buscarProdutoCodigo(&lista_produtos);
-                    inserirMeio(&lista_produtos, produto, produto_referencia);
+                    printf("Digite o código do produto: ");
+                    scanf("%d", &codigo_produto);
+                    No *produto_referencia = buscarProdutoCodigo(&lista_produtos, codigo_produto);
+                    inserirAposNo(&lista_produtos, produto, produto_referencia);
                     break;
                 }
 
@@ -417,15 +455,25 @@ int main()
 
         case 2:
         {
-            No *produto_buscado = buscarProdutoCodigo(&lista_produtos);
-            alterarProduto(&lista_produtos, produto_buscado);
+            int codigo_produto;
+
+            printf("Digite o código do produto: ");
+            scanf("%d", &codigo_produto);
+            No *produto_buscado = buscarProdutoCodigo(&lista_produtos, codigo_produto);
+            alterarProduto(produto_buscado);
             break;
         }
 
         case 3:
-            No *produto_buscado = buscarProdutoCodigo(&lista_produtos);
+        {
+            int codigo_produto;
+
+            printf("Digite o código do produto: ");
+            scanf("%d", &codigo_produto);
+            No *produto_buscado = buscarProdutoCodigo(&lista_produtos, codigo_produto);
             excluirProduto(&lista_produtos, produto_buscado);
             break;
+        }
 
         case 4:
             listarProdutos(&lista_produtos);
