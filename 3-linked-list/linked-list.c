@@ -66,6 +66,7 @@ No *criarNo(Usuario usuario)
 
     // Atribui os valores do nó e retorna o nó
     novo_no->usuario = usuario;
+    novo_no->proximo = NULL;
 
     return novo_no;
 }
