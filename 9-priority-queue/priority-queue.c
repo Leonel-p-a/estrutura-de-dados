@@ -7,7 +7,7 @@ typedef struct Paciente
 {
     char nome[100];
     int senha;
-    char prioridade[20];
+    int prioridade;
 } Paciente;
 
 typedef struct No
@@ -49,28 +49,11 @@ Paciente criarPaciente(FilaPrioridade *fila)
         printf("\nNível: ");
         scanf("%d", &nivel_prioridade);
 
-        switch (nivel_prioridade)
-        {
-        case 1:
-            strcpy(paciente.prioridade, "Emergência");
-            break;
+        if (nivel_prioridade < 1 || nivel_prioridade > 4)
+            printf("Opção inválida\n");
+    } while (nivel_prioridade < 1 || nivel_prioridade > 4);
 
-        case 2:
-            strcpy(paciente.prioridade, "Urgente");
-            break;
-
-        case 3:
-            strcpy(paciente.prioridade, "Preferencial");
-            break;
-
-        case 4:
-            strcpy(paciente.prioridade, "Normal");
-            break;
-        
-        default:
-            printf("Opção inválida!\n");
-        }
-    } while (nivel_prioridade != 1 && nivel_prioridade != 2 && nivel_prioridade != 3 && nivel_prioridade != 4);
+    paciente.prioridade = nivel_prioridade;
     
     return paciente;
 }
@@ -91,26 +74,6 @@ No* criarNo(Paciente paciente)
     return no;
 }
 
-int verificarPrioridade(Paciente paciente)
-{
-    if (strcmp(paciente.prioridade, "Emergência") == 0)
-    {
-        return 1;
-    }
-    else if (strcmp(paciente.prioridade, "Urgente") == 0)
-    {
-        return 2;
-    }
-    else if (strcmp(paciente.prioridade, "Preferencial") == 0)
-    {
-        return 3;
-    }
-    else
-    {
-        return 4;
-    }
-}
-
 void adicionarPaciente(FilaPrioridade *fila, Paciente paciente)
 {
     No *no = criarNo(paciente);
@@ -128,129 +91,28 @@ void adicionarPaciente(FilaPrioridade *fila, Paciente paciente)
         return;
     }
 
-    No *atual = fila->frente;
-
-    // Se o paciente for prioridade Emergência
-    if (verificarPrioridade(no->dados) == 1)
+    if (paciente.prioridade < fila->frente->dados.prioridade)
     {
-        while (atual != NULL)
-        {
-            // Se for o primeiro com prioridade Emergência na fila
-            if (verificarPrioridade(atual->dados) != 1)
-            {
-                no->proximo = fila->frente;
-                fila->frente = no;
-                printf("\nPaciente adicionado à fila com sucesso!\n");
-                return;
-            }
+        no->proximo = fila->frente;
+        fila->frente = no;
 
-            // Se só houver um paciente na fila
-            if (atual->proximo == NULL)
-            {
-                atual->proximo = no;
-                printf("\nPaciente adicionado à fila com sucesso!\n");
-                return;
-            }
-
-            // Se houver outros com prioridade Emergência, é adicionado como o último com tal prioridade
-            if (verificarPrioridade(atual->proximo->dados) != 1)
-            {
-                No *proximo = atual->proximo;
-                atual->proximo = no;
-                no->proximo = proximo;
-                printf("\nPaciente adicionado à fila com sucesso!\n");
-                return;
-            }
-
-            atual = atual->proximo;
-        }
-    }
-
-    // Se o paciente for prioridade Urgente
-    if (verificarPrioridade(no->dados) == 2)
-    {
-        // Se o paciente for o que tiver a maior prioridade
-        if (verificarPrioridade(atual->dados) > 2)
-        {
-            no->proximo = atual;
-            fila->frente = no;
-            printf("\nPaciente adicionado à fila com sucesso!\n");
-            return;
-        }
-
-        // Se houver outros com prioridade maior ou mesma prioridade, percorre eles
-        if (verificarPrioridade(atual->dados) <= 2)
-        {
-            No *anterior;
-
-            while (verificarPrioridade(atual->dados) <= 2)
-            {
-                anterior = atual;
-                atual = atual->proximo;
-
-                if (atual == NULL)
-                    break;
-            }
-
-            anterior->proximo = no;
-            no->proximo = atual;
-            printf("\nPaciente adicionado à fila com sucesso!\n");
-            return;
-        }
-    }
-
-    // Se o paciente for prioridade Preferencial
-    if (verificarPrioridade(no->dados) == 3)
-    {
-        // Se o paciente for o que tiver a maior prioridade
-        if (verificarPrioridade(atual->dados) > 3)
-        {
-            no->proximo = atual;
-            fila->frente = no;
-            printf("\nPaciente adicionado à fila com sucesso!\n");
-            return;
-        }
-
-        // Se houver outros com prioridade maior ou mesma prioridade, percorre eles
-        if (verificarPrioridade(atual->dados) <= 3)
-        {
-            No *anterior;
-
-            while (verificarPrioridade(atual->dados) <= 3)
-            {
-                anterior = atual;
-                atual = atual->proximo;
-
-                if (atual == NULL)
-                    break;
-            }
-
-            anterior->proximo = no;
-            no->proximo = atual;
-            printf("\nPaciente adicionado à fila com sucesso!\n");
-            return;
-        }
-    }
-
-    // Se o paciente for prioridade Normal
-    if (verificarPrioridade(no->dados) == 4)
-    {
-        No *anterior;
-
-        // Percorre toda a lista
-        while (verificarPrioridade(atual->dados) <= 4)
-        {
-            anterior = atual;
-            atual = atual->proximo;
-
-            if (atual == NULL)
-                break;
-        }
-
-        anterior->proximo = no;
         printf("\nPaciente adicionado à fila com sucesso!\n");
         return;
     }
+
+    No *atual = fila->frente;
+    No *anterior = NULL;
+
+    while (atual != NULL && atual->dados.prioridade <= paciente.prioridade)
+    {
+        anterior = atual;
+        atual = atual->proximo;
+    }
+
+    anterior->proximo = no;
+    no->proximo = atual;
+    printf("\nPaciente adicionado à fila com sucesso!\n");
+    return;
 }
 
 int chamarProximoPaciente(FilaPrioridade *fila, Paciente *paciente)
@@ -292,11 +154,20 @@ void mostrarFila(FilaPrioridade *fila)
         return;
     }
 
+    char *prioridades[] =
+    {
+        "",
+        "Emergência",
+        "Urgente",
+        "Preferencial",
+        "Normal"
+    };
+
     No *atual = fila->frente;
     printf("\nAguardando na fila:\n");
     while (atual != NULL)
     {
-        printf("\n%03d - %s - %s\n", atual->dados.senha, atual->dados.nome, atual->dados.prioridade);
+        printf("\n%03d - %s - %s\n", atual->dados.senha, atual->dados.nome, prioridades[atual->dados.prioridade]);
         atual = atual->proximo;
     }
 }
