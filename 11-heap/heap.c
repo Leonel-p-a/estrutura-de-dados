@@ -39,15 +39,20 @@ void heapifyUp(Heap *heap)
     }
 }
 
-void inserir(Heap *heap, int valor)
+int inserir(Heap *heap, int valor)
 {
+    if (heap->tamanho >= TAMANHO)
+        return 0;
+
     heap->valores[heap->tamanho] = valor;
     heap->tamanho++;
 
     heapifyUp(heap);
+
+    return 1;
 }
 
-void heapifyDown(Heap *heap, int atual)
+void heapifyDown(Heap *heap, int atual, int tamanho)
 {
     while (1)
     {
@@ -56,7 +61,7 @@ void heapifyDown(Heap *heap, int atual)
         int direita = 2 * atual + 2;
 
         // verifica se existe pelo menos o filho esquerdo
-        if (esquerda >= heap->tamanho)
+        if (esquerda >= tamanho)
         {
             break;
         }
@@ -64,7 +69,7 @@ void heapifyDown(Heap *heap, int atual)
         int maiorFilho = esquerda;
 
         // verifica se existe o filho direito e se ele é maior que o esquerdo
-        if (direita < heap->tamanho && heap->valores[direita] > heap->valores[esquerda])
+        if (direita < tamanho && heap->valores[direita] > heap->valores[esquerda])
         {
             maiorFilho = direita;
         }
@@ -104,12 +109,12 @@ int remover(Heap *heap, int *removido)
     heap->valores[0] = heap->valores[heap->tamanho - 1];
     heap->tamanho--;
 
-    heapifyDown(heap, 0);
+    heapifyDown(heap, 0, heap->tamanho);
 
     return 1;
 }
 
-void construirHeap(Heap *heap, int vetor[], int tamanho)
+void construirHeap(Heap *heap, const int vetor[], int tamanho)
 {
     memcpy(heap->valores, vetor, sizeof(int) * tamanho);
     heap->tamanho = tamanho;
@@ -118,7 +123,19 @@ void construirHeap(Heap *heap, int vetor[], int tamanho)
 
     for (int i = ultimoPai; i >= 0; i--)
     {
-        heapifyDown(heap, i);
+        heapifyDown(heap, i, heap->tamanho);
+    }
+}
+
+void heapSort(Heap *heap, const int vetor[], int tamanho)
+{
+    construirHeap(heap, vetor, tamanho);
+
+    while (tamanho > 1)
+    {
+        trocar(&heap->valores[0], &heap->valores[tamanho - 1]);
+        tamanho--;
+        heapifyDown(heap, 0, tamanho);
     }
 }
 
@@ -150,6 +167,7 @@ int main()
         printf("2 - Exibir Heap\n");
         printf("3 - Remover elemento\n");
         printf("4 - Construir Heap\n");
+        printf("5 - Ordenar Heap em ordem crescente\n");
         printf("0 - Sair\n");
 
         printf("\nEscolha: ");
@@ -167,7 +185,14 @@ int main()
             printf("Insira um valor: ");
             scanf("%d", &valor);
 
-            inserir(&heap, valor);
+            if (inserir(&heap, valor))
+            {
+                printf("\nValor adicionado com sucesso!\n");
+            }
+            else
+            {
+                printf("\nO Heap está cheio!\n");
+            }
 
             break;
         }
@@ -209,6 +234,14 @@ int main()
             int vetor[] = { 2, 20, 5, 30, 15, 40, 8 };
             int tamanho = 7;
             construirHeap(&heap, vetor, tamanho);
+            break;
+        }
+
+        case 5:
+        {
+            int vetor[] = { 2, 20, 5, 30, 15, 40, 8 };
+            int tamanho = 7;
+            heapSort(&heap, vetor, tamanho);
             break;
         }
 
