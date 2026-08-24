@@ -109,8 +109,11 @@ int remover(Heap *heap, int *removido)
     return 1;
 }
 
-void construirHeap(Heap *heap)
+void construirHeap(Heap *heap, int vetor[], int tamanho)
 {
+    memcpy(heap->valores, vetor, sizeof(int) * tamanho);
+    heap->tamanho = tamanho;
+    
     int ultimoPai = (heap->tamanho / 2) - 1;
 
     for (int i = ultimoPai; i >= 0; i--)
@@ -203,15 +206,9 @@ int main()
 
         case 4:
         {
-            heap.valores[0] = 2;
-            heap.valores[1] = 20;
-            heap.valores[2] = 5;
-            heap.valores[3] = 30;
-            heap.valores[4] = 15;
-            heap.valores[5] = 40;
-            heap.valores[6] = 8;
-            heap.tamanho = 7;
-            construirHeap(&heap);
+            int vetor[] = { 2, 20, 5, 30, 15, 40, 8 };
+            int tamanho = 7;
+            construirHeap(&heap, vetor, tamanho);
             break;
         }
 
