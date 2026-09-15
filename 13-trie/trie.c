@@ -191,6 +191,19 @@ bool removerPalavra(No *raiz, const char *palavra)
 //     }
 // }
 
+void liberarTrie(No *raiz)
+{
+    if (raiz == NULL)
+        return;
+
+    for (int i = 0; i < ALFABETO; i++)
+    {
+        liberarTrie(raiz->filhos[i]);
+    }
+
+    free(raiz);
+}
+
 int main()
 {
     setlocale(LC_ALL, "pt_BR.UTF-8");
@@ -292,6 +305,7 @@ int main()
         }
 
         case 0:
+            liberarTrie(raiz);
             break;
 
         default:
